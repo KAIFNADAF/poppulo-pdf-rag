@@ -1,5 +1,4 @@
 .env
 __pycache__/
 *.pyc
-artifacts/*.bin
-artifacts/*.json
+artifacts/
