@@ -1,15 +1,13 @@
 # Poppulo PDF RAG Demo
 
-A simple Retrieval-Augmented Generation (RAG) system for asking questions about PDF documents.
+A Retrieval-Augmented Generation (RAG) system for asking questions about PDF documents.
 
 The user uploads a PDF, the system indexes the document, and questions can be asked in natural language. Answers are generated using retrieved sections from the document, and the supporting source text is displayed.
 
 **Live Demo:**  
-(https://poppulo-pdf-rag-hw5ngjh3dbdzfuex4jozvm.streamlit.app/)
+Streamlit App: (https://poppulo-pdf-rag-hw5ngjh3dbdzfuex4jozvm.streamlit.app/)
 
-
-
-## Best Viewing Settings
+## Recommended view
 
 For the best layout:
 
@@ -26,25 +24,29 @@ This project demonstrates a document question-answering system built using a mod
 
 Instead of letting the language model answer from its own knowledge, the system first retrieves relevant text from the uploaded document. The retrieved text is then used as context for the LLM to generate a grounded answer.
 
-The UI also displays the source document name, page number, and supporting text.
+To improve transparency, the application also displays the exact source evidence used to support the answer, including the document name, page number, and supporting text.
 
 
 
 ## How It Works
 
-1. User uploads a PDF
-2. Text is extracted using **PyMuPDF**
-3. Text is cleaned and converted into citation units
-4. Citation units are grouped into retrieval chunks
-5. Chunks are embedded using **sentence-transformers**
-6. Embeddings are stored in a **FAISS vector index**
-7. When the user asks a question:
+The application follows a structured pipeline from document upload to answer generation.
+
+1. A PDF document is uploaded through the Streamlit interface.
+2. Text blocks are extracted using **PyMuPDF**.
+3. Extracted text is cleaned and normalized.
+4. Cleaned blocks are converted into **citation units** representing paragraph-level content.
+5. Citation units are grouped into overlapping **retrieval chunks**.
+6. Chunks are embedded using **sentence-transformers (all-MiniLM-L6-v2)**.
+7. Embeddings are stored in a **FAISS vector index** together with metadata.
+8. When the user asks a question:
    - the query is embedded
    - the most relevant chunks are retrieved
-8. Retrieved text is used to build a prompt
-9. **Groq LLM** generates the answer
-10. Supporting evidence is mapped and shown in the UI
+9. Retrieved context is used to construct a grounded prompt.
+10. **Groq LLM** generates the final answer.
+11. Retrieved chunks are mapped back to citation units to display the original supporting text.
 
+This separation between answer generation and evidence mapping ensures that citations shown to the user come directly from retrieved document content rather than from the language model itself.
 
 
 ## System Architecture
@@ -52,29 +54,29 @@ The UI also displays the source document name, page number, and supporting text.
 ```mermaid
 flowchart TD
 
-A[Upload PDF] --> B[Parse PDF<br>PyMuPDF]
-B --> C[Clean Text]
-C --> D[Citation Units]
+A[Upload PDF] --> B[Extract Text<br>PyMuPDF]
+B --> C[Clean and Normalize Text]
+C --> D[Create Citation Units]
 
-D --> E[Retrieval Chunks]
-E --> F[Embeddings<br>all-MiniLM-L6-v2]
-F --> G[FAISS Index]
+D --> E[Build Retrieval Chunks]
+E --> F[Create Embeddings<br>MiniLM]
+F --> G[Vector Index<br>FAISS + Metadata]
 
-H[User Question] --> I[Query Embedding]
-I --> J[Vector Retrieval]
+H[User Question] --> I[Embed Query]
+I --> J[Find Relevant Chunks]
 
 G --> J
 
-J --> K[Prompt Builder]
-K --> L[Groq LLM]
+J --> K[Build Prompt<br>Using Retrieved Text]
+K --> L[Generate Answer<br>Groq LLM]
 
-L --> M[Answer]
+J --> M[Map Evidence<br>Chunk → Citation]
+M --> N[Source Text + Page Number]
 
-J --> N[Evidence Mapping]
-N --> O[Source Text + Page]
+L --> O[Final Answer]
+N --> O
 
-M --> P[Streamlit UI]
-O --> P
+O --> P[Streamlit Interface]
 
 ```
 
@@ -108,34 +110,41 @@ pdf_rag_app
 ├── README.md
 └── .gitignore
 ```
-
-## Design Choices
-
-1. Evidence Mapping
-
-The system does not rely on the LLM to generate citations. Evidence is mapped in Python using retrieved chunk metadata.
-
-2. Single Active Document
-
-The UI allows multiple uploaded PDFs, but only one document is indexed and queried at a time. This avoids mixing information across documents.
-
-3. Strict Prompting
-
-The prompt instructs the model to answer only from retrieved context.
+The codebase is organized so each stage of the pipeline is isolated in its own module.
+This allows the indexing, retrieval, and generation components to remain independent and easier to extend.
 
 
+## Evidence-Grounded Answers
 
-## Error Handling
+The system emphasizes transparency by displaying supporting evidence alongside the generated answer.
 
-The system includes checks for:
+Each answer includes:
 
-- empty PDFs
-- parsing failures
-- missing embeddings
+- Source document name
+
+- Page number
+
+- Supporting text snippet
+
+This information is mapped deterministically from retrieved chunk metadata rather than generated by the language model.
+
+## Handling Edge Cases
+
+Several validation checks are built into the pipeline to ensure stable behavior:
+
+- PDFs with no extractable text
+
+- empty parsing results
+
+- failed embedding generation
+
 - empty retrieval results
+
+- mismatched index and metadata
+
 - LLM provider failures
 
-User-friendly messages are shown in the UI.
+These checks prevent the application from returning misleading or unsupported answers.
 
 
 ## Deployment
@@ -143,15 +152,27 @@ User-friendly messages are shown in the UI.
 The app is deployed on Streamlit Community Cloud using Groq for LLM inference.
 If the app sleeps due to inactivity, clicking Wake App will restart it.
 
+## Design Decisions
 
+A few design choices guided the system architecture:
+
+1. Citation-first processing
+
+Citation units are created before chunking so that retrieved content can always be traced back to its original paragraph.
+
+2. Metadata-backed retrieval
+
+Vector search results are linked to stored metadata so the UI can display source evidence with document and page references.
+
+3. Single active document retrieval
+
+The interface allows multiple PDFs to be uploaded but restricts querying to one indexed document at a time. This avoids mixing information across documents and keeps retrieval results clear.
 
 ## Example Questions
 
 - What is the main idea of this document?
 - What problem does the paper solve?
 - What methods are proposed?
-
-
 
 ## Future Improvements
 
