@@ -90,25 +90,23 @@ pdf_rag_app
 │   └── main.py                # Streamlit UI
 │
 ├── src
-│   ├── chunker.py             # Builds overlapping retrieval chunks
-│   ├── citation_builder.py    # Builds citation units from cleaned text blocks
-│   ├── config.py              # Configuration and paths
-│   ├── embedder.py            # Sentence-transformer embedding logic
-│   ├── generator.py           # Groq / Ollama generation wrapper
+│   ├── pdf_parser.py          # PDF parsing using PyMuPDF
+│   ├── text_cleaner.py        # Text normalization and filtering
+│   ├── citation_builder.py    # Builds citation units
+│   ├── chunker.py             # Creates retrieval chunks
+│   ├── embedder.py            # Sentence-transformer embeddings
+│   ├── retriever.py           # FAISS retrieval logic
+│   ├── prompt_builder.py      # Prompt construction
+│   ├── generator.py           # LLM provider wrapper
 │   ├── index_store.py         # FAISS index + metadata persistence
-│   ├── models.py              # Dataclasses for blocks, chunks, results
-│   ├── pdf_parser.py          # PDF parsing with PyMuPDF
 │   ├── pipeline.py            # End-to-end indexing and QA pipeline
-│   ├── prompt_builder.py      # Strict grounded prompt construction
-│   ├── retriever.py           # Top-k FAISS retrieval
-│   └── text_cleaner.py        # Text normalization and noise filtering
+│   └── models.py              # Data structures
 │
 ├── data
-│   └── raw                    # Sample/demo PDFs
+│   └── raw                    # Sample PDFs
 │
 ├── requirements.txt
-├── README.md
-└── .gitignore
+└── README.md
 ```
 The codebase is organized so each stage of the pipeline is isolated in its own module.
 This allows the indexing, retrieval, and generation components to remain independent and easier to extend.
