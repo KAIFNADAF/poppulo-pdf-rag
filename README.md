@@ -154,15 +154,15 @@ If the app sleeps due to inactivity, clicking Wake App will restart it.
 
 A few design choices guided the system architecture:
 
-1. Citation-first processing
+1. Keeping Track of Source Text
 
 Citation units are created before chunking so that retrieved content can always be traced back to its original paragraph.
 
-2. Metadata-backed retrieval
+2. Storing Metadata for Evidence
 
 Vector search results are linked to stored metadata so the UI can display source evidence with document and page references.
 
-3. Single active document retrieval
+3. Querying One Document at a Time
 
 The interface allows multiple PDFs to be uploaded but restricts querying to one indexed document at a time. This avoids mixing information across documents and keeps retrieval results clear.
 
