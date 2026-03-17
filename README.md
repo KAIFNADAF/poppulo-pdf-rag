@@ -148,7 +148,7 @@ These checks prevent the application from returning misleading or unsupported an
 ## Deployment
 
 The app is deployed on Streamlit Community Cloud using Groq for LLM inference.
-If the app sleeps due to inactivity, clicking Wake App will restart it.
+If the app sleeps due to inactivity, clicking Relaunch will restart it.
 
 ## Design Decisions
 
