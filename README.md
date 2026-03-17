@@ -52,31 +52,61 @@ This separation between answer generation and evidence mapping ensures that cita
 ## System Architecture
 
 ```mermaid
-flowchart TD
+flowchart TB
 
-A[Upload PDF] --> B[Extract Text<br>PyMuPDF]
-B --> C[Clean and Normalize Text]
-C --> D[Create Citation Units]
+%% ---------------------
+%% SECTION STYLES
+%% ---------------------
+classDef indexing fill:#e6f4f1,stroke:#5b8a72,stroke-width:1.5px,color:#1f2d2a;
+classDef querying fill:#f3f1df,stroke:#9a925f,stroke-width:1.5px,color:#2f2b1f;
+classDef bridge fill:#d9e8ff,stroke:#5b7db1,stroke-width:1.8px,color:#1f2a3a;
+classDef answer fill:#fbe4ec,stroke:#c06c84,stroke-width:1.8px,color:#3a1f29;
 
-D --> E[Build Retrieval Chunks]
-E --> F[Create Embeddings<br>MiniLM]
-F --> G[Vector Index<br>FAISS + Metadata]
+%% ---------------------
+%% INDEXING (LEFT BLOCK)
+%% ---------------------
+subgraph Indexing["Document Processing & Indexing"]
+direction TB
+A["Upload PDF"] --> B["Extract Text<br/>PyMuPDF"]
+B --> C["Clean Text"]
+C --> D["Create Citation Units"]
+D --> E["Build Retrieval Chunks"]
+E --> F["Generate Embeddings<br/>MiniLM"]
+F --> G["Store FAISS Index<br/>Chunk/Citation Metadata"]
+end
 
-H[User Question] --> I[Embed Query]
-I --> J[Find Relevant Chunks]
+%% ---------------------
+%% RETRIEVAL BRIDGE
+%% ---------------------
+J["Retrieve Top-K Chunks<br/>FAISS"]
 
+%% ---------------------
+%% QUERYING (RIGHT BLOCK)
+%% ---------------------
+subgraph Querying["Question Answering Pipeline"]
+direction TB
+H["User Question"] --> I["Embed Query"]
+I --> J
+J --> K["Build Prompt"]
+K --> L["Generate Answer<br/>Groq"]
+J --> M["Map Evidence<br/>Chunk to Citation Units"]
+L --> N["Answer + Supporting Evidence"]
+M --> N
+N --> O["Streamlit Interface"]
+end
+
+%% ---------------------
+%% CROSS LINK
+%% ---------------------
 G --> J
 
-J --> K[Build Prompt<br>Using Retrieved Text]
-K --> L[Generate Answer<br>Groq LLM]
-
-J --> M[Map Evidence<br>Chunk → Citation]
-M --> N[Source Text + Page Number]
-
-L --> O[Final Answer]
-N --> O
-
-O --> P[Streamlit Interface]
+%% ---------------------
+%% NODE STYLES
+%% ---------------------
+class A,B,C,D,E,F,G indexing;
+class H,I,K,L,M,O querying;
+class J bridge;
+class N answer;
 
 ```
 
